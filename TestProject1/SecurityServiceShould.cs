@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using Securities;
 
 namespace TestProject1
@@ -24,7 +25,7 @@ namespace TestProject1
             List<string> isins = new List<string> { "US1234567890", "GB0987654321" };
 
             // Act
-            await _securityService.ExecuteAsync(isins);
+            await _securityService.ExecuteAsync(new ExecuteSecurityRequest() { Isins = isins});
 
             // Assert
             _mockIsinsPricesService.Verify(mock => mock.GetPrices(isins), Times.Once);
@@ -45,7 +46,7 @@ namespace TestProject1
                 });
 
             // Act
-            await _securityService.ExecuteAsync(isins);
+            await _securityService.ExecuteAsync(new ExecuteSecurityRequest() { Isins = isins });
 
             // Assert
             var pricesList = new List<PriceEntity>
@@ -62,6 +63,20 @@ namespace TestProject1
                 )),
                 Times.Once
             );
+        }
+
+        [Test]
+        public async Task Should_Validate_Invalid_Isins()
+        {
+            // Arrange
+            List<string> isins = new List<string> { "TI1234567890", "GB0987654321", "" };
+
+            // Act
+            var result = await _securityService.ExecuteAsync(new ExecuteSecurityRequest() { Isins = isins });
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Reasons.Count.Should().Be(2);
         }
     }
 }

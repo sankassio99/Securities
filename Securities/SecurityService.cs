@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentResults;
 
 namespace Securities;
 
@@ -30,14 +28,23 @@ public interface IPricesRepository
     Task SaveBatch(IEnumerable<PriceEntity> priceEntity);
 }
 
-public class SecurityService(IIsinsPricesService _isinsPricesService, IPricesRepository _pricesRepository)
+public record ExecuteSecurityRequest
 {
-    public async Task ExecuteAsync(List<string> isins)
+    public List<string> Isins { get; init; } = [];
+}
+
+public class SecurityService(
+    IIsinsPricesService _isinsPricesService, 
+    IPricesRepository _pricesRepository)
+{
+    public async Task<Result> ExecuteAsync(ExecuteSecurityRequest request)
     {
-        var pricesResponse = await _isinsPricesService.GetPrices(isins);
+        var pricesResponse = await _isinsPricesService.GetPrices(request.Isins);
 
         var prices = pricesResponse.Select(price => new PriceEntity(price.Isin, price.Price));
 
         await _pricesRepository.SaveBatch(prices);
+
+        return Result.Ok();
     }
 }
