@@ -32,5 +32,22 @@ namespace TestProject1
             result.IsValid.Should().BeTrue();
             result.Errors.Should().BeEmpty();
         }
+
+        [Test]
+        public async Task Fail_When_ISIN_Is_Empty()
+        {
+            // Arrange
+            var request = new ExecuteSecurityRequest
+            {
+                Isins = new List<string> { }
+            };
+
+            // Act
+            var result = _validator.Validate(request);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+        }
     }
 }
