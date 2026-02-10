@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using FluentValidation;
+using FluentValidation.Results;
 using Moq;
 using Securities;
 
@@ -9,13 +11,17 @@ namespace TestProject1
         private SecurityService _securityService;
         private Mock<IIsinsPricesService> _mockIsinsPricesService;
         private Mock<IPricesRepository> _mockPricesRepository;
+        private Mock<IValidator<ExecuteSecurityRequest>> _mockIsinsValidator;
 
         [SetUp]
         public void Setup()
         {
             _mockIsinsPricesService = new Mock<IIsinsPricesService>();
             _mockPricesRepository = new Mock<IPricesRepository>();
-            _securityService = new SecurityService(_mockIsinsPricesService.Object, _mockPricesRepository.Object);
+            _mockIsinsValidator = new Mock<IValidator<ExecuteSecurityRequest>>();
+
+            _securityService = new SecurityService(
+                _mockIsinsPricesService.Object, _mockPricesRepository.Object, _mockIsinsValidator.Object);
         }
 
         [Test]
@@ -65,18 +71,28 @@ namespace TestProject1
             );
         }
 
+        // TODO: test just the fail scenario of validation
         [Test]
         public async Task Should_Validate_Invalid_Isins()
         {
             // Arrange
-            List<string> isins = new List<string> { "TI1234567890", "GB0987654321", "" };
+            List<string> isins = new List<string> { "TI1234567890", "GB0987654321", "IT123" };
+
+            var validationResult = new ValidationResult(new[]
+            {
+                new ValidationFailure("Isins[0]", "ISIN must be exactly 12 characters long."),
+                new ValidationFailure("Isins[0]", "ISIN must start with 'IT'.")
+            });
+
+            _mockIsinsValidator.Setup(v => v.Validate(It.IsAny<ExecuteSecurityRequest>()))
+                .Returns(validationResult);
 
             // Act
             var result = await _securityService.ExecuteAsync(new ExecuteSecurityRequest() { Isins = isins });
 
             // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Reasons.Count.Should().Be(2);
+            result.IsValid.Should().BeFalse();
+            result.Errors.Count.Should().Be(2);
         }
     }
 }

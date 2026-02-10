@@ -2,9 +2,10 @@
 
 namespace Securities;
 
-public class SecurityValidator : AbstractValidator<ExecuteSecurityRequest>
+public class IsinsValidator : AbstractValidator<ExecuteSecurityRequest>
 {
-    public SecurityValidator()
+    // TODO: Write a new setup file
+    public IsinsValidator()
     {
         RuleFor(security => security.Isins)
             .NotEmpty()

@@ -1,4 +1,6 @@
 ﻿using FluentResults;
+using FluentValidation;
+using FluentValidation.Results;
 
 namespace Securities;
 
@@ -35,16 +37,24 @@ public record ExecuteSecurityRequest
 
 public class SecurityService(
     IIsinsPricesService _isinsPricesService, 
-    IPricesRepository _pricesRepository)
+    IPricesRepository _pricesRepository,
+    IValidator<ExecuteSecurityRequest> requestValidator)
 {
-    public async Task<Result> ExecuteAsync(ExecuteSecurityRequest request)
+    public async Task<ValidationResult> ExecuteAsync(ExecuteSecurityRequest request)
     {
+        var validator = requestValidator.Validate(request);
+
+        if (!validator.IsValid)
+        {
+            return validator;
+        }
+        
         var pricesResponse = await _isinsPricesService.GetPrices(request.Isins);
 
         var prices = pricesResponse.Select(price => new PriceEntity(price.Isin, price.Price));
 
         await _pricesRepository.SaveBatch(prices);
 
-        return Result.Ok();
+        return validator;
     }
 }
