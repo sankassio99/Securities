@@ -48,7 +48,8 @@ namespace TestProject1
                 .ReturnsAsync(new List<SecurityPrice>
                 {
                     new SecurityPrice("US1234567890", 100.50m),
-                    new SecurityPrice("GB0987654321", 200.75m)
+                    new SecurityPrice("GB0987654321", 200.75m),
+                    new SecurityPrice("", 200.75m)
                 });
 
             // Act

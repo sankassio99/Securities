@@ -44,10 +44,12 @@ public class SecurityService(
     {
         var validator = requestValidator.Validate(request);
 
-        if (!validator.IsValid)
-        {
-            return validator;
-        }
+        //if (!validator.IsValid)
+        //{
+        //    return validator;
+        //}
+
+        var filteredIsins = request.Isins.Where(isin => validator.Errors.Any(error => error.PropertyName == isin));
         
         var pricesResponse = await _isinsPricesService.GetPrices(request.Isins);
 
